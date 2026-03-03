@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.service;
+package com.checkout.payment.gateway.utils;
 
 import com.checkout.payment.gateway.enums.ValidationErrorCode;
 import com.checkout.payment.gateway.model.PostPaymentRequest;

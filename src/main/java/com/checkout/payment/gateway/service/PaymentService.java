@@ -4,6 +4,7 @@ import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.exception.PaymentNotFoundException;
 import com.checkout.payment.gateway.mapper.PaymentMapper;
 import com.checkout.payment.gateway.model.BankPaymentResponse;
+import com.checkout.payment.gateway.utils.PaymentRequestValidator;
 import com.checkout.payment.gateway.model.PostPaymentRequest;
 import com.checkout.payment.gateway.model.PostPaymentResponse;
 import com.checkout.payment.gateway.model.ValidationError;
