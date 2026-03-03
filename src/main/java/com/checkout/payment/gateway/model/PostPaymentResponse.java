@@ -1,0 +1,105 @@
+package com.checkout.payment.gateway.model;
+
+import com.checkout.payment.gateway.enums.PaymentStatus;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
+import java.util.UUID;
+
+public class PostPaymentResponse {
+  private UUID id;
+  private PaymentStatus status;
+  private String cardNumberLastFour;
+  private int expiryMonth;
+  private int expiryYear;
+  private String currency;
+  private int amount;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private List<String> rejectionReasons;
+
+  private PostPaymentResponse() {}
+
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  public static class Builder {
+    private UUID id;
+    private PaymentStatus status;
+    private String cardNumberLastFour;
+    private int expiryMonth;
+    private int expiryYear;
+    private String currency;
+    private int amount;
+    private List<String> rejectionReasons;
+
+    private Builder() {}
+
+    public Builder id(UUID id) { this.id = id; return this; }
+    public Builder status(PaymentStatus status) { this.status = status; return this; }
+    public Builder cardNumberLastFour(String cardNumberLastFour) { this.cardNumberLastFour = cardNumberLastFour; return this; }
+    public Builder expiryMonth(int expiryMonth) { this.expiryMonth = expiryMonth; return this; }
+    public Builder expiryYear(int expiryYear) { this.expiryYear = expiryYear; return this; }
+    public Builder currency(String currency) { this.currency = currency; return this; }
+    public Builder amount(int amount) { this.amount = amount; return this; }
+    public Builder rejectionReasons(List<String> rejectionReasons) { this.rejectionReasons = rejectionReasons; return this; }
+
+    public PostPaymentResponse build() {
+      PostPaymentResponse response = new PostPaymentResponse();
+      response.id = this.id;
+      response.status = this.status;
+      response.cardNumberLastFour = this.cardNumberLastFour;
+      response.expiryMonth = this.expiryMonth;
+      response.expiryYear = this.expiryYear;
+      response.currency = this.currency;
+      response.amount = this.amount;
+      response.rejectionReasons = this.rejectionReasons;
+      return response;
+    }
+  }
+
+  public UUID getId() {
+    return id;
+  }
+
+  public PaymentStatus getStatus() {
+    return status;
+  }
+
+  public String getCardNumberLastFour() {
+    return cardNumberLastFour;
+  }
+
+  public int getExpiryMonth() {
+    return expiryMonth;
+  }
+
+  public int getExpiryYear() {
+    return expiryYear;
+  }
+
+  public String getCurrency() {
+    return currency;
+  }
+
+  public int getAmount() {
+    return amount;
+  }
+
+  public List<String> getRejectionReasons() {
+    return rejectionReasons;
+  }
+
+  @Override
+  public String toString() {
+    return "PostPaymentResponse{" +
+        "id=" + id +
+        ", status=" + status +
+        ", cardNumberLastFour=" + cardNumberLastFour +
+        ", expiryMonth=" + expiryMonth +
+        ", expiryYear=" + expiryYear +
+        ", currency='" + currency + '\'' +
+        ", amount=" + amount +
+        ", rejectionReasons=" + rejectionReasons +
+        '}';
+  }
+}
