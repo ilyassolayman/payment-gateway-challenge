@@ -1,3 +1,9 @@
+# Payment Gateway
+
+For sample curl commands covering happy path, unhappy path, and error scenarios, see [TESTING.md](TESTING.md).
+
+---
+
 # Design Decisions
 
 ## Static utility classes vs Spring-managed beans
