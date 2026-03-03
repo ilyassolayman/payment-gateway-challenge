@@ -3,18 +3,20 @@ package com.checkout.payment.gateway.mapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.model.BankPaymentRequest;
 import com.checkout.payment.gateway.model.BankPaymentResponse;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.model.Payment;
+import com.checkout.payment.gateway.model.PaymentRequest;
+import com.checkout.payment.gateway.model.PaymentResponse;
 import org.junit.jupiter.api.Test;
 
 class PaymentMapperTest {
 
-  private PostPaymentRequest validRequest() {
-    PostPaymentRequest request = new PostPaymentRequest();
+  private PaymentRequest validRequest() {
+    PaymentRequest request = new PaymentRequest();
     request.setCardNumber("2222405343248877");
     request.setExpiryMonth(4);
     request.setExpiryYear(2027);
@@ -28,7 +30,7 @@ class PaymentMapperTest {
 
   @Test
   void toBankPaymentRequest_mapsCardNumberCurrencyAmountAndCvv() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
 
     BankPaymentRequest result = PaymentMapper.toBankPaymentRequest(request);
 
@@ -40,7 +42,7 @@ class PaymentMapperTest {
 
   @Test
   void toBankPaymentRequest_formatsSingleDigitMonthWithLeadingZero() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(4);
     request.setExpiryYear(2027);
 
@@ -51,7 +53,7 @@ class PaymentMapperTest {
 
   @Test
   void toBankPaymentRequest_formatsDoubleDigitMonthWithoutPadding() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(12);
     request.setExpiryYear(2028);
 
@@ -60,43 +62,43 @@ class PaymentMapperTest {
     assertEquals("12/2028", result.getExpiryDate());
   }
 
-  // ── toPostPaymentResponse ─────────────────────────────────────────────────────
+  // ── toPayment ─────────────────────────────────────────────────────────────────
 
   @Test
-  void toPostPaymentResponse_whenAuthorized_statusIsAuthorized() {
+  void toPayment_whenAuthorized_statusIsAuthorized() {
     BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
 
-    PostPaymentResponse result = PaymentMapper.toPostPaymentResponse(validRequest(), bankResponse);
+    Payment result = PaymentMapper.toPayment(validRequest(), bankResponse);
 
     assertEquals(PaymentStatus.AUTHORIZED, result.getStatus());
   }
 
   @Test
-  void toPostPaymentResponse_whenNotAuthorized_statusIsDeclined() {
+  void toPayment_whenNotAuthorized_statusIsDeclined() {
     BankPaymentResponse bankResponse = new BankPaymentResponse(false, null);
 
-    PostPaymentResponse result = PaymentMapper.toPostPaymentResponse(validRequest(), bankResponse);
+    Payment result = PaymentMapper.toPayment(validRequest(), bankResponse);
 
     assertEquals(PaymentStatus.DECLINED, result.getStatus());
   }
 
   @Test
-  void toPostPaymentResponse_extractsLastFourDigitsOfCard() {
-    PostPaymentRequest request = validRequest();
+  void toPayment_extractsLastFourDigitsOfCard() {
+    PaymentRequest request = validRequest();
     request.setCardNumber("2222405343248877");
     BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
 
-    PostPaymentResponse result = PaymentMapper.toPostPaymentResponse(request, bankResponse);
+    Payment result = PaymentMapper.toPayment(request, bankResponse);
 
     assertEquals("8877", result.getCardNumberLastFour());
   }
 
   @Test
-  void toPostPaymentResponse_mapsExpiryMonthYearCurrencyAndAmount() {
-    PostPaymentRequest request = validRequest();
+  void toPayment_mapsExpiryMonthYearCurrencyAndAmount() {
+    PaymentRequest request = validRequest();
     BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
 
-    PostPaymentResponse result = PaymentMapper.toPostPaymentResponse(request, bankResponse);
+    Payment result = PaymentMapper.toPayment(request, bankResponse);
 
     assertEquals(request.getExpiryMonth(), result.getExpiryMonth());
     assertEquals(request.getExpiryYear(), result.getExpiryYear());
@@ -105,21 +107,68 @@ class PaymentMapperTest {
   }
 
   @Test
-  void toPostPaymentResponse_generatesNonNullId() {
+  void toPayment_storesAuthorizationCode() {
     BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
 
-    PostPaymentResponse result = PaymentMapper.toPostPaymentResponse(validRequest(), bankResponse);
+    Payment result = PaymentMapper.toPayment(validRequest(), bankResponse);
+
+    assertEquals("AUTH-001", result.getAuthorizationCode());
+  }
+
+  @Test
+  void toPayment_whenDeclined_authorizationCodeIsNull() {
+    BankPaymentResponse bankResponse = new BankPaymentResponse(false, null);
+
+    Payment result = PaymentMapper.toPayment(validRequest(), bankResponse);
+
+    assertNull(result.getAuthorizationCode());
+  }
+
+  @Test
+  void toPayment_generatesNonNullId() {
+    BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
+
+    Payment result = PaymentMapper.toPayment(validRequest(), bankResponse);
 
     assertNotNull(result.getId());
   }
 
   @Test
-  void toPostPaymentResponse_generatesDifferentIdOnEachCall() {
+  void toPayment_generatesDifferentIdOnEachCall() {
     BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
 
-    PostPaymentResponse result1 = PaymentMapper.toPostPaymentResponse(validRequest(), bankResponse);
-    PostPaymentResponse result2 = PaymentMapper.toPostPaymentResponse(validRequest(), bankResponse);
+    Payment result1 = PaymentMapper.toPayment(validRequest(), bankResponse);
+    Payment result2 = PaymentMapper.toPayment(validRequest(), bankResponse);
 
     assertNotEquals(result1.getId(), result2.getId());
+  }
+
+  // ── toPaymentResponse ─────────────────────────────────────────────────────
+
+  @Test
+  void toPaymentResponse_mapsAllFieldsFromPayment() {
+    BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
+    Payment payment = PaymentMapper.toPayment(validRequest(), bankResponse);
+
+    PaymentResponse result = PaymentMapper.toPaymentResponse(payment);
+
+    assertEquals(payment.getId(), result.getId());
+    assertEquals(payment.getStatus(), result.getStatus());
+    assertEquals(payment.getCardNumberLastFour(), result.getCardNumberLastFour());
+    assertEquals(payment.getExpiryMonth(), result.getExpiryMonth());
+    assertEquals(payment.getExpiryYear(), result.getExpiryYear());
+    assertEquals(payment.getCurrency(), result.getCurrency());
+    assertEquals(payment.getAmount(), result.getAmount());
+  }
+
+  @Test
+  void toPaymentResponse_doesNotExposeAuthorizationCode() {
+    BankPaymentResponse bankResponse = new BankPaymentResponse(true, "AUTH-001");
+    Payment payment = PaymentMapper.toPayment(validRequest(), bankResponse);
+
+    PaymentResponse result = PaymentMapper.toPaymentResponse(payment);
+
+    // authorizationCode is stored on Payment but is not surfaced in the API response
+    assertNull(result.getRejectionReasons());
   }
 }

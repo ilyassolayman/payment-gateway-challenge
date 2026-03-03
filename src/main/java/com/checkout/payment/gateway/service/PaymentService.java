@@ -4,9 +4,10 @@ import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.exception.PaymentNotFoundException;
 import com.checkout.payment.gateway.mapper.PaymentMapper;
 import com.checkout.payment.gateway.model.BankPaymentResponse;
+import com.checkout.payment.gateway.model.Payment;
 import com.checkout.payment.gateway.utils.PaymentRequestValidator;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.model.PaymentRequest;
+import com.checkout.payment.gateway.model.PaymentResponse;
 import com.checkout.payment.gateway.model.ValidationError;
 import com.checkout.payment.gateway.model.ValidationResult;
 import com.checkout.payment.gateway.repository.IPaymentsRepository;
@@ -30,18 +31,19 @@ public class PaymentService implements IPaymentService {
     this.bankPaymentService = bankPaymentService;
   }
 
-  public PostPaymentResponse getPaymentById(UUID id) {
+  public PaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to payment with ID {}", id);
-    return paymentsRepository.get(id).orElseThrow(() -> new PaymentNotFoundException(id));
+    Payment payment = paymentsRepository.get(id).orElseThrow(() -> new PaymentNotFoundException(id));
+    return PaymentMapper.toPaymentResponse(payment);
   }
 
-  public PostPaymentResponse processPayment(PostPaymentRequest request) {
+  public PaymentResponse processPayment(PaymentRequest request) {
     request.setCardNumber(request.getCardNumber() == null ? null : request.getCardNumber().replaceAll("\\s", ""));
     ValidationResult validationResult = PaymentRequestValidator.validate(request);
 
     if (!validationResult.isValid()) {
       LOG.warn("Payment rejected due to validation errors: {}", validationResult.getErrors());
-      return PostPaymentResponse.builder()
+      return PaymentResponse.builder()
           .status(PaymentStatus.REJECTED)
           .rejectionReasons(validationResult.getErrors().stream()
               .map(ValidationError::message)
@@ -50,10 +52,10 @@ public class PaymentService implements IPaymentService {
     }
 
     BankPaymentResponse bankResponse = bankPaymentService.processPayment(PaymentMapper.toBankPaymentRequest(request));
-    PostPaymentResponse response = PaymentMapper.toPostPaymentResponse(request, bankResponse);
+    Payment payment = PaymentMapper.toPayment(request, bankResponse);
 
-    paymentsRepository.add(response);
-    LOG.debug("Payment {} processed with status {}", response.getId(), response.getStatus());
-    return response;
+    paymentsRepository.add(payment);
+    LOG.debug("Payment {} processed with status {}", payment.getId(), payment.getStatus());
+    return PaymentMapper.toPaymentResponse(payment);
   }
 }

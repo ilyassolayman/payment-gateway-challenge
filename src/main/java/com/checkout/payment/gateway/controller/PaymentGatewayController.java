@@ -1,8 +1,8 @@
 package com.checkout.payment.gateway.controller;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.model.PaymentRequest;
+import com.checkout.payment.gateway.model.PaymentResponse;
 import com.checkout.payment.gateway.service.IPaymentService;
 import java.net.URI;
 import java.util.UUID;
@@ -27,8 +27,8 @@ public class PaymentGatewayController {
   }
 
   @PostMapping("/payment")
-  public ResponseEntity<PostPaymentResponse> postPayment(@RequestBody PostPaymentRequest request) {
-    PostPaymentResponse response = paymentService.processPayment(request);
+  public ResponseEntity<PaymentResponse> postPayment(@RequestBody PaymentRequest request) {
+    PaymentResponse response = paymentService.processPayment(request);
     if (response.getStatus() == PaymentStatus.REJECTED) {
       return ResponseEntity.badRequest().body(response);
     }
@@ -40,7 +40,7 @@ public class PaymentGatewayController {
   }
 
   @GetMapping("/payment/{id}")
-  public ResponseEntity<PostPaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
+  public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable UUID id) {
     return new ResponseEntity<>(paymentService.getPaymentById(id), HttpStatus.OK);
   }
 }

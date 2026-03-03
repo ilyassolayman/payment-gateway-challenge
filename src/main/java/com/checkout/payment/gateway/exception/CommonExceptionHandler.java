@@ -33,7 +33,7 @@ public class CommonExceptionHandler {
   @ExceptionHandler(BankPaymentClientException.class)
   public ResponseEntity<ErrorResponse> handleBankPaymentClientException(BankPaymentClientException ex) {
     LOG.error("Bank rejected payment request — mapping error: {}", ex.getMessage());
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_GATEWAY);
   }
 
   @ExceptionHandler(BankPaymentRequestException.class)

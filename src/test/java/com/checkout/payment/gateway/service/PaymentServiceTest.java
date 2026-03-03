@@ -16,8 +16,9 @@ import com.checkout.payment.gateway.exception.BankPaymentRequestException;
 import com.checkout.payment.gateway.exception.PaymentNotFoundException;
 import com.checkout.payment.gateway.model.BankPaymentRequest;
 import com.checkout.payment.gateway.model.BankPaymentResponse;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.model.Payment;
+import com.checkout.payment.gateway.model.PaymentRequest;
+import com.checkout.payment.gateway.model.PaymentResponse;
 import com.checkout.payment.gateway.repository.IPaymentsRepository;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,8 +40,8 @@ class PaymentServiceTest {
   @InjectMocks
   private PaymentService paymentService;
 
-  private PostPaymentRequest validRequest() {
-    PostPaymentRequest request = new PostPaymentRequest();
+  private PaymentRequest validRequest() {
+    PaymentRequest request = new PaymentRequest();
     request.setCardNumber("2222405343248877");
     request.setExpiryMonth(4);
     request.setExpiryYear(2027);
@@ -57,10 +58,10 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(true, "AUTH-123"));
 
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("2222 4053 4324 8877");
 
-    PostPaymentResponse response = paymentService.processPayment(request);
+    PaymentResponse response = paymentService.processPayment(request);
 
     assertEquals(PaymentStatus.AUTHORIZED, response.getStatus());
     assertEquals("8877", response.getCardNumberLastFour());
@@ -70,38 +71,38 @@ class PaymentServiceTest {
 
   @Test
   void whenValidationFails_returnsRejectedStatus() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber(null);
 
-    PostPaymentResponse response = paymentService.processPayment(request);
+    PaymentResponse response = paymentService.processPayment(request);
 
     assertEquals(PaymentStatus.REJECTED, response.getStatus());
   }
 
   @Test
   void whenValidationFails_rejectionReasonsArePopulated() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber(null);
 
-    PostPaymentResponse response = paymentService.processPayment(request);
+    PaymentResponse response = paymentService.processPayment(request);
 
     assertFalse(response.getRejectionReasons().isEmpty());
   }
 
   @Test
   void whenValidationFails_multipleErrorsAreAllReturned() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber(null);
     request.setAmount(0);
 
-    PostPaymentResponse response = paymentService.processPayment(request);
+    PaymentResponse response = paymentService.processPayment(request);
 
     assertEquals(2, response.getRejectionReasons().size());
   }
 
   @Test
   void whenValidationFails_bankServiceIsNeverCalled() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber(null);
 
     paymentService.processPayment(request);
@@ -117,7 +118,7 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(true, "AUTH-123"));
 
-    PostPaymentResponse response = paymentService.processPayment(validRequest());
+    PaymentResponse response = paymentService.processPayment(validRequest());
 
     assertEquals(PaymentStatus.AUTHORIZED, response.getStatus());
   }
@@ -127,9 +128,9 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(true, "AUTH-123"));
 
-    PostPaymentResponse response = paymentService.processPayment(validRequest());
+    paymentService.processPayment(validRequest());
 
-    verify(paymentsRepository).add(response);
+    verify(paymentsRepository).add(any(Payment.class));
   }
 
   @Test
@@ -137,7 +138,7 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(true, "AUTH-123"));
 
-    PostPaymentResponse response = paymentService.processPayment(validRequest());
+    PaymentResponse response = paymentService.processPayment(validRequest());
 
     assertNotNull(response.getId());
   }
@@ -149,7 +150,7 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(false, null));
 
-    PostPaymentResponse response = paymentService.processPayment(validRequest());
+    PaymentResponse response = paymentService.processPayment(validRequest());
 
     assertEquals(PaymentStatus.DECLINED, response.getStatus());
   }
@@ -159,9 +160,9 @@ class PaymentServiceTest {
     when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
         .thenReturn(new BankPaymentResponse(false, null));
 
-    PostPaymentResponse response = paymentService.processPayment(validRequest());
+    paymentService.processPayment(validRequest());
 
-    verify(paymentsRepository).add(response);
+    verify(paymentsRepository).add(any(Payment.class));
   }
 
   // ── processPayment — bank exceptions ─────────────────────────────────────────
@@ -191,15 +192,13 @@ class PaymentServiceTest {
   @Test
   void whenPaymentExists_returnsPayment() {
     UUID id = UUID.randomUUID();
-    PostPaymentResponse stored = PostPaymentResponse.builder()
-        .id(id)
-        .status(PaymentStatus.AUTHORIZED)
-        .build();
+    Payment stored = new Payment(id, PaymentStatus.AUTHORIZED, "8877", 4, 2027, "GBP", 100, "AUTH-123");
     when(paymentsRepository.get(id)).thenReturn(Optional.of(stored));
 
-    PostPaymentResponse response = paymentService.getPaymentById(id);
+    PaymentResponse response = paymentService.getPaymentById(id);
 
-    assertEquals(stored, response);
+    assertEquals(id, response.getId());
+    assertEquals(PaymentStatus.AUTHORIZED, response.getStatus());
   }
 
   @Test

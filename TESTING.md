@@ -91,7 +91,7 @@ curl -s -X POST http://localhost:8090/api/v1/payment -H "Content-Type: applicati
 
 ---
 
-## 6. Unhappy path — Single validation error (card number too long)
+## 5. Unhappy path — Single validation error (card number too long)
 
 Card number has 20 digits, exceeding the 19-digit maximum.
 
@@ -111,7 +111,7 @@ curl -s -X POST http://localhost:8090/api/v1/payment -H "Content-Type: applicati
 
 ---
 
-## 7. Unhappy path — Multiple validation errors (expired card, card number too long, CVV too long)
+## 6. Unhappy path — Multiple validation errors (expired card, card number too long, CVV too long)
 
 ```bash
 curl -s -X POST http://localhost:8090/api/v1/payment -H "Content-Type: application/json" -d '{"card_number":"22224053432488770000","expiry_month":1,"expiry_year":2020,"currency":"GBP","amount":100,"cvv":"12345"}'
@@ -131,7 +131,7 @@ curl -s -X POST http://localhost:8090/api/v1/payment -H "Content-Type: applicati
 
 ---
 
-## 8. Endpoint which doesn't exist
+## 7. Endpoint which doesn't exist
 
 ```bash
 curl -s http://localhost:8090/api/v1/unknown/endpoint
@@ -147,7 +147,7 @@ curl -s http://localhost:8090/api/v1/unknown/endpoint
 
 ---
 
-## 9. Payment ID that doesn't exist
+## 8. Payment ID that doesn't exist
 
 ```bash
 curl -s http://localhost:8090/api/v1/payment/00000000-0000-0000-0000-000000000000

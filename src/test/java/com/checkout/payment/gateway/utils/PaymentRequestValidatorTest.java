@@ -5,14 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.checkout.payment.gateway.enums.ValidationErrorCode;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
+import com.checkout.payment.gateway.model.PaymentRequest;
 import com.checkout.payment.gateway.model.ValidationResult;
 import org.junit.jupiter.api.Test;
 
 class PaymentRequestValidatorTest {
 
-  private PostPaymentRequest validRequest() {
-    PostPaymentRequest request = new PostPaymentRequest();
+  private PaymentRequest validRequest() {
+    PaymentRequest request = new PaymentRequest();
     request.setCardNumber("2222405343248877");
     request.setExpiryMonth(4);
     request.setExpiryYear(2027);
@@ -31,7 +31,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberIsNullThenCardNumberRequiredError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber(null);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -40,7 +40,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberIsBlankThenCardNumberRequiredError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("   ");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -49,7 +49,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberTooShortThenInvalidLengthError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("1234567890123"); // 13 digits
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -58,7 +58,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberTooLongThenInvalidLengthError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("12345678901234567890"); // 20 digits
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -67,7 +67,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberContainsLettersThenNonNumericError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("222240534324abcd");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -76,14 +76,14 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCardNumberIs14DigitsThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("12345678901231");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
 
   @Test
   void whenCardNumberIs19DigitsThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("1234567890123456789");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
@@ -91,8 +91,17 @@ class PaymentRequestValidatorTest {
   // ── Expiry month ─────────────────────────────────────────────────────────────
 
   @Test
+  void whenExpiryMonthIsNullThenExpiryMonthRequiredError() {
+    PaymentRequest request = validRequest();
+    request.setExpiryMonth(null);
+    ValidationResult result = PaymentRequestValidator.validate(request);
+    assertFalse(result.isValid());
+    assertEquals(ValidationErrorCode.EXPIRY_MONTH_REQUIRED, result.getErrors().get(0).code());
+  }
+
+  @Test
   void whenExpiryMonthIsZeroThenExpiryMonthInvalidError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(0);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -101,7 +110,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenExpiryMonthIs13ThenExpiryMonthInvalidError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(13);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -110,7 +119,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenExpiryMonthIs1ThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(1);
     request.setExpiryYear(2027);
     assertTrue(PaymentRequestValidator.validate(request).isValid());
@@ -118,17 +127,28 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenExpiryMonthIs12ThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(12);
     request.setExpiryYear(2026);
     assertTrue(PaymentRequestValidator.validate(request).isValid());
+  }
+
+  // ── Expiry year ──────────────────────────────────────────────────────────────
+
+  @Test
+  void whenExpiryYearIsNullThenExpiryYearRequiredError() {
+    PaymentRequest request = validRequest();
+    request.setExpiryYear(null);
+    ValidationResult result = PaymentRequestValidator.validate(request);
+    assertFalse(result.isValid());
+    assertEquals(ValidationErrorCode.EXPIRY_YEAR_REQUIRED, result.getErrors().get(0).code());
   }
 
   // ── Expiry date (combined) ───────────────────────────────────────────────────
 
   @Test
   void whenExpiryDateIsInPastThenExpiryDateInPastError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(1);
     request.setExpiryYear(2025);
     ValidationResult result = PaymentRequestValidator.validate(request);
@@ -139,7 +159,7 @@ class PaymentRequestValidatorTest {
   @Test
   void whenExpiryDateIsCurrentMonthThenValid() {
     // Card expiring 03/2026 is valid through March 31, 2026
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(3);
     request.setExpiryYear(2026);
     assertTrue(PaymentRequestValidator.validate(request).isValid());
@@ -147,7 +167,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenExpiryDateIsNextMonthThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(4);
     request.setExpiryYear(2026);
     assertTrue(PaymentRequestValidator.validate(request).isValid());
@@ -156,7 +176,7 @@ class PaymentRequestValidatorTest {
   @Test
   void whenExpiryDateIsLastMonthThenExpiredError() {
     // Card expiring 02/2026 expired on March 1, 2026
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setExpiryMonth(2);
     request.setExpiryYear(2026);
     ValidationResult result = PaymentRequestValidator.validate(request);
@@ -168,7 +188,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCurrencyIsNullThenCurrencyRequiredError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency(null);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -177,7 +197,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCurrencyIsUnsupportedThenCurrencyNotSupportedError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency("JPY");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -186,7 +206,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCurrencyIsNotThreeCharsThenInvalidLengthError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency("US");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -195,21 +215,21 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCurrencyIsUsdThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency("USD");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
 
   @Test
   void whenCurrencyIsGbpThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency("GBP");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
 
   @Test
   void whenCurrencyIsEurThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCurrency("EUR");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
@@ -217,8 +237,17 @@ class PaymentRequestValidatorTest {
   // ── Amount ───────────────────────────────────────────────────────────────────
 
   @Test
+  void whenAmountIsNullThenAmountRequiredError() {
+    PaymentRequest request = validRequest();
+    request.setAmount(null);
+    ValidationResult result = PaymentRequestValidator.validate(request);
+    assertFalse(result.isValid());
+    assertEquals(ValidationErrorCode.AMOUNT_REQUIRED, result.getErrors().get(0).code());
+  }
+
+  @Test
   void whenAmountIsZeroThenAmountInvalidError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setAmount(0);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -227,7 +256,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenAmountIsNegativeThenAmountInvalidError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setAmount(-1);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -236,16 +265,32 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenAmountIsPositiveThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setAmount(1);
     assertTrue(PaymentRequestValidator.validate(request).isValid());
+  }
+
+  @Test
+  void whenAmountIsAtMaximumThenValid() {
+    PaymentRequest request = validRequest();
+    request.setAmount(PaymentRequestValidator.MAX_AMOUNT);
+    assertTrue(PaymentRequestValidator.validate(request).isValid());
+  }
+
+  @Test
+  void whenAmountExceedsMaximumThenAmountTooLargeError() {
+    PaymentRequest request = validRequest();
+    request.setAmount(PaymentRequestValidator.MAX_AMOUNT + 1);
+    ValidationResult result = PaymentRequestValidator.validate(request);
+    assertFalse(result.isValid());
+    assertEquals(ValidationErrorCode.AMOUNT_TOO_LARGE, result.getErrors().get(0).code());
   }
 
   // ── CVV ──────────────────────────────────────────────────────────────────────
 
   @Test
   void whenCvvIsNullThenCvvRequiredError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv(null);
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -254,7 +299,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCvvIsTwoCharsThenCvvInvalidLengthError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("12");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -263,7 +308,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCvvIsFiveCharsThenCvvInvalidLengthError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("12345");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -272,7 +317,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCvvContainsLettersThenCvvNonNumericError() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("abc");
     ValidationResult result = PaymentRequestValidator.validate(request);
     assertFalse(result.isValid());
@@ -281,21 +326,21 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenCvvIsThreeDigitsThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("123");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
 
   @Test
   void whenCvvIsFourDigitsThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("1234");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
 
   @Test
   void whenCvvHasLeadingZerosThenValid() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCvv("007");
     assertTrue(PaymentRequestValidator.validate(request).isValid());
   }
@@ -304,7 +349,7 @@ class PaymentRequestValidatorTest {
 
   @Test
   void whenMultipleFieldsInvalidThenAllErrorsReturned() {
-    PostPaymentRequest request = validRequest();
+    PaymentRequest request = validRequest();
     request.setCardNumber("123"); // too short
     request.setCurrency("JPY");   // unsupported
     request.setAmount(0);         // invalid

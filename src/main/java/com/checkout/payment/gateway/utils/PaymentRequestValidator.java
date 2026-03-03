@@ -1,22 +1,22 @@
 package com.checkout.payment.gateway.utils;
 
 import com.checkout.payment.gateway.enums.ValidationErrorCode;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
+import com.checkout.payment.gateway.model.PaymentRequest;
 import com.checkout.payment.gateway.model.ValidationResult;
 import java.time.YearMonth;
 import java.util.Set;
 
 public class PaymentRequestValidator {
 
-  private static final Set<String> SUPPORTED_CURRENCIES = Set.of("USD", "GBP", "EUR");
+  static final Set<String> SUPPORTED_CURRENCIES = Set.of("USD", "GBP", "EUR");
+  static final int MAX_AMOUNT = 100_000_000;
 
   private PaymentRequestValidator() {}
 
-  public static ValidationResult validate(PostPaymentRequest request) {
+  public static ValidationResult validate(PaymentRequest request) {
     ValidationResult result = new ValidationResult();
     validateCardNumber(request.getCardNumber(), result);
-    validateExpiryMonth(request.getExpiryMonth(), result);
-    validateExpiryDate(request.getExpiryYear(), request.getExpiryMonth(), result);
+    validateExpiry(request.getExpiryMonth(), request.getExpiryYear(), result);
     validateCurrency(request.getCurrency(), result);
     validateAmount(request.getAmount(), result);
     validateCvv(request.getCvv(), result);
@@ -36,20 +36,34 @@ public class PaymentRequestValidator {
     }
   }
 
-  private static void validateExpiryMonth(int expiryMonth, ValidationResult result) {
+  private static void validateExpiry(Integer expiryMonth, Integer expiryYear, ValidationResult result) {
+    validateExpiryMonth(expiryMonth, result);
+    validateExpiryYear(expiryYear, result);
+    if (expiryMonth != null && expiryYear != null) {
+      try {
+        YearMonth expiry = YearMonth.of(expiryYear, expiryMonth);
+        if (expiry.isBefore(YearMonth.now())) {
+          result.addError(ValidationErrorCode.EXPIRY_DATE_IN_PAST, "Card has expired");
+        }
+      } catch (Exception e) {
+        result.addError(ValidationErrorCode.EXPIRY_DATE_INVALID, "Invalid expiry date");
+      }
+    }
+  }
+
+  private static void validateExpiryMonth(Integer expiryMonth, ValidationResult result) {
+    if (expiryMonth == null) {
+      result.addError(ValidationErrorCode.EXPIRY_MONTH_REQUIRED, "Expiry month is required");
+      return;
+    }
     if (expiryMonth < 1 || expiryMonth > 12) {
       result.addError(ValidationErrorCode.EXPIRY_MONTH_INVALID, "Expiry month must be between 1 and 12");
     }
   }
 
-  private static void validateExpiryDate(int expiryYear, int expiryMonth, ValidationResult result) {
-    try {
-      YearMonth expiry = YearMonth.of(expiryYear, expiryMonth);
-      if (expiry.isBefore(YearMonth.now())) {
-        result.addError(ValidationErrorCode.EXPIRY_DATE_IN_PAST, "Card has expired");
-      }
-    } catch (Exception e) {
-      result.addError(ValidationErrorCode.EXPIRY_DATE_INVALID, "Invalid expiry date");
+  private static void validateExpiryYear(Integer expiryYear, ValidationResult result) {
+    if (expiryYear == null) {
+      result.addError(ValidationErrorCode.EXPIRY_YEAR_REQUIRED, "Expiry year is required");
     }
   }
 
@@ -63,13 +77,22 @@ public class PaymentRequestValidator {
       return;
     }
     if (!SUPPORTED_CURRENCIES.contains(currency.toUpperCase())) {
-      result.addError(ValidationErrorCode.CURRENCY_NOT_SUPPORTED, "Currency must be one of: USD, GBP, EUR");
+      result.addError(ValidationErrorCode.CURRENCY_NOT_SUPPORTED,
+          "Currency must be one of: " + String.join(", ", SUPPORTED_CURRENCIES));
     }
   }
 
-  private static void validateAmount(int amount, ValidationResult result) {
+  private static void validateAmount(Integer amount, ValidationResult result) {
+    if (amount == null) {
+      result.addError(ValidationErrorCode.AMOUNT_REQUIRED, "Amount is required");
+      return;
+    }
     if (amount <= 0) {
       result.addError(ValidationErrorCode.AMOUNT_INVALID, "Amount must be greater than zero");
+      return;
+    }
+    if (amount > MAX_AMOUNT) {
+      result.addError(ValidationErrorCode.AMOUNT_TOO_LARGE, "Amount must not exceed " + MAX_AMOUNT + " minor currency units");
     }
   }
 

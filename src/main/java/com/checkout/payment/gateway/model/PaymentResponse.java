@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class PostPaymentResponse {
+public class PaymentResponse {
   private UUID id;
   private PaymentStatus status;
   private String cardNumberLastFour;
@@ -16,7 +16,7 @@ public class PostPaymentResponse {
   private Integer amount;
   private List<String> rejectionReasons;
 
-  private PostPaymentResponse() {}
+  private PaymentResponse() {}
 
   public static Builder builder() {
     return new Builder();
@@ -43,8 +43,8 @@ public class PostPaymentResponse {
     public Builder amount(Integer amount) { this.amount = amount; return this; }
     public Builder rejectionReasons(List<String> rejectionReasons) { this.rejectionReasons = rejectionReasons; return this; }
 
-    public PostPaymentResponse build() {
-      PostPaymentResponse response = new PostPaymentResponse();
+    public PaymentResponse build() {
+      PaymentResponse response = new PaymentResponse();
       response.id = this.id;
       response.status = this.status;
       response.cardNumberLastFour = this.cardNumberLastFour;
@@ -91,7 +91,7 @@ public class PostPaymentResponse {
 
   @Override
   public String toString() {
-    return "PostPaymentResponse{" +
+    return "PaymentResponse{" +
         "id=" + id +
         ", status=" + status +
         ", cardNumberLastFour=" + cardNumberLastFour +
