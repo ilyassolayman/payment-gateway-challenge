@@ -50,6 +50,22 @@ class PaymentServiceTest {
     return request;
   }
 
+  // ── processPayment — card number normalisation ───────────────────────────────
+
+  @Test
+  void whenCardNumberHasSpaces_spacesAreStrippedBeforeProcessing() {
+    when(bankPaymentService.processPayment(any(BankPaymentRequest.class)))
+        .thenReturn(new BankPaymentResponse(true, "AUTH-123"));
+
+    PostPaymentRequest request = validRequest();
+    request.setCardNumber("2222 4053 4324 8877");
+
+    PostPaymentResponse response = paymentService.processPayment(request);
+
+    assertEquals(PaymentStatus.AUTHORIZED, response.getStatus());
+    assertEquals("8877", response.getCardNumberLastFour());
+  }
+
   // ── processPayment — validation rejected ─────────────────────────────────────
 
   @Test

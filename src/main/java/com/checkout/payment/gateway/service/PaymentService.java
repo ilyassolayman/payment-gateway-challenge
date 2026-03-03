@@ -36,6 +36,7 @@ public class PaymentService implements IPaymentService {
   }
 
   public PostPaymentResponse processPayment(PostPaymentRequest request) {
+    request.setCardNumber(request.getCardNumber() == null ? null : request.getCardNumber().replaceAll("\\s", ""));
     ValidationResult validationResult = PaymentRequestValidator.validate(request);
 
     if (!validationResult.isValid()) {

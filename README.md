@@ -81,6 +81,17 @@ All exceptions flow through `CommonExceptionHandler` — no try/catch scattered 
 
 ---
 
+## Card number normalisation
+
+Whitespace is stripped from the card number at the start of `PaymentService.processPayment()` before validation or mapping runs. This allows naturally formatted card numbers (e.g. `"2222 4053 4324 8877"`) to be accepted without rejecting valid input due to spacing.
+
+### Trade-off
+This is a single line on the request model's setter call in the service, so no dedicated normaliser class was introduced. A `PaymentRequestNormaliser` would be the right abstraction if normalisation grew to cover multiple fields with non-trivial rules — but for one field and one operation, that abstraction would be premature.
+
+An alternative considered was a custom Jackson `@JsonDeserialize` deserializer on the `cardNumber` field of `PostPaymentRequest`. This would strip whitespace at deserialization time, keeping the service clean. However, it requires an additional deserializer class, making it more complex than the one-liner it replaces. The service approach was preferred for simplicity.
+
+---
+
 ## Assumptions
 
 - **Currency support** is intentionally limited to a small set of ISO codes (not all 180+)
