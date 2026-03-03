@@ -55,7 +55,7 @@ class PaymentGatewayControllerTest {
 
     paymentsRepository.add(payment);
 
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + payment.getId()))
+    mvc.perform(MockMvcRequestBuilders.get("/api/v1/payment/" + payment.getId()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(payment.getStatus().getName()))
         .andExpect(jsonPath("$.cardNumberLastFour").value(payment.getCardNumberLastFour()))
@@ -67,7 +67,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get("/payment/" + UUID.randomUUID()))
+    mvc.perform(MockMvcRequestBuilders.get("/api/v1/payment/" + UUID.randomUUID()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.errorMessage").value(org.hamcrest.Matchers.containsString("Payment not found")))
         .andExpect(jsonPath("$.timestamp").isNotEmpty());
@@ -80,7 +80,7 @@ class PaymentGatewayControllerTest {
     when(restTemplate.postForEntity(anyString(), any(), eq(BankPaymentResponse.class)))
         .thenReturn(ResponseEntity.ok(new BankPaymentResponse(true, "auth-code-123")));
 
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -109,7 +109,7 @@ class PaymentGatewayControllerTest {
     when(restTemplate.postForEntity(anyString(), any(), eq(BankPaymentResponse.class)))
         .thenReturn(ResponseEntity.ok(new BankPaymentResponse(false, "")));
 
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -129,7 +129,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenCardNumberTooShortThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -148,7 +148,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenCardNumberContainsLettersThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -167,7 +167,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenCardExpiredThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -186,7 +186,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenUnsupportedCurrencyThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -205,7 +205,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenInvalidCvvThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -224,7 +224,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenAmountIsZeroThenRejectedWith400() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -246,7 +246,7 @@ class PaymentGatewayControllerTest {
     when(restTemplate.postForEntity(anyString(), any(), eq(BankPaymentResponse.class)))
         .thenThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE));
 
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -267,7 +267,7 @@ class PaymentGatewayControllerTest {
     when(restTemplate.postForEntity(anyString(), any(), eq(BankPaymentResponse.class)))
         .thenThrow(new ResourceAccessException("Connection refused"));
 
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("""
                 {
@@ -287,7 +287,7 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenMalformedJsonThenBadRequestReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.APPLICATION_JSON)
             .content("{this is not valid json"))
         .andExpect(status().isBadRequest())
@@ -296,21 +296,21 @@ class PaymentGatewayControllerTest {
 
   @Test
   void whenUnsupportedHttpMethodThenMethodNotAllowedReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.delete("/payment"))
+    mvc.perform(MockMvcRequestBuilders.delete("/api/v1/payment"))
         .andExpect(status().isMethodNotAllowed())
         .andExpect(jsonPath("$.errorMessage").value("HTTP method not supported"));
   }
 
   @Test
   void whenInvalidPaymentIdFormatThenBadRequestReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.get("/payment/not-a-uuid"))
+    mvc.perform(MockMvcRequestBuilders.get("/api/v1/payment/not-a-uuid"))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.errorMessage").value("Invalid request parameter: id"));
   }
 
   @Test
   void whenUnsupportedContentTypeThenUnsupportedMediaTypeReturned() throws Exception {
-    mvc.perform(MockMvcRequestBuilders.post("/payment")
+    mvc.perform(MockMvcRequestBuilders.post("/api/v1/payment")
             .contentType(MediaType.TEXT_PLAIN)
             .content("card_number=1234"))
         .andExpect(status().isUnsupportedMediaType())
