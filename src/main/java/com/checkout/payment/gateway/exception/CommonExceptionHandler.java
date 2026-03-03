@@ -24,12 +24,6 @@ public class CommonExceptionHandler {
     return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.NOT_FOUND);
   }
 
-  @ExceptionHandler(ValidationException.class)
-  public ResponseEntity<ErrorResponse> handleValidationException(ValidationException ex) {
-    LOG.warn("Payment rejected: {}", ex.getMessage());
-    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.BAD_REQUEST);
-  }
-
   @ExceptionHandler(BankPaymentClientException.class)
   public ResponseEntity<ErrorResponse> handleBankPaymentClientException(BankPaymentClientException ex) {
     LOG.error("Bank rejected payment request — mapping error: {}", ex.getMessage());
