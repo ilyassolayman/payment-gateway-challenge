@@ -18,10 +18,10 @@ public class CommonExceptionHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(CommonExceptionHandler.class);
 
-  @ExceptionHandler(EventProcessingException.class)
-  public ResponseEntity<ErrorResponse> handleEventProcessingException(EventProcessingException ex) {
+  @ExceptionHandler(PaymentNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handlePaymentNotFoundException(PaymentNotFoundException ex) {
     LOG.warn("Payment not found: {}", ex.getMessage());
-    return new ResponseEntity<>(new ErrorResponse("Payment not found"), HttpStatus.NOT_FOUND);
+    return new ResponseEntity<>(new ErrorResponse(ex.getMessage()), HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(ValidationException.class)
@@ -75,7 +75,7 @@ public class CommonExceptionHandler {
   @ExceptionHandler(NoHandlerFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoHandlerFound(NoHandlerFoundException ex) {
     LOG.warn("No handler found for {} {}", ex.getHttpMethod(), ex.getRequestURL());
-    return new ResponseEntity<>(new ErrorResponse("Resource not found"), HttpStatus.NOT_FOUND);
+    return new ResponseEntity<>(new ErrorResponse("No endpoint found for " + ex.getRequestURL()), HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(Exception.class)

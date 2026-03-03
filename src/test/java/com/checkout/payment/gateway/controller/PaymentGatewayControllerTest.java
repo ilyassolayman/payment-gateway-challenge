@@ -69,7 +69,8 @@ class PaymentGatewayControllerTest {
   void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
     mvc.perform(MockMvcRequestBuilders.get("/payment/" + UUID.randomUUID()))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.message").value("Payment not found"));
+        .andExpect(jsonPath("$.errorMessage").value(org.hamcrest.Matchers.containsString("Payment not found")))
+        .andExpect(jsonPath("$.timestamp").isNotEmpty());
   }
 
   // ── POST /payment ───────────────────────────────────────────────────────────
@@ -258,7 +259,7 @@ class PaymentGatewayControllerTest {
                 }
                 """))
         .andExpect(status().isBadGateway())
-        .andExpect(jsonPath("$.message").value("Bank payment service is unavailable"));
+        .andExpect(jsonPath("$.errorMessage").value("Bank payment service is unavailable"));
   }
 
   @Test
@@ -279,7 +280,7 @@ class PaymentGatewayControllerTest {
                 }
                 """))
         .andExpect(status().isBadGateway())
-        .andExpect(jsonPath("$.message").value("Bank payment service is unavailable"));
+        .andExpect(jsonPath("$.errorMessage").value("Bank payment service is unavailable"));
   }
 
   // ── HTTP protocol error scenarios ───────────────────────────────────────────
@@ -290,21 +291,21 @@ class PaymentGatewayControllerTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content("{this is not valid json"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Malformed JSON request"));
+        .andExpect(jsonPath("$.errorMessage").value("Malformed JSON request"));
   }
 
   @Test
   void whenUnsupportedHttpMethodThenMethodNotAllowedReturned() throws Exception {
     mvc.perform(MockMvcRequestBuilders.delete("/payment"))
         .andExpect(status().isMethodNotAllowed())
-        .andExpect(jsonPath("$.message").value("HTTP method not supported"));
+        .andExpect(jsonPath("$.errorMessage").value("HTTP method not supported"));
   }
 
   @Test
   void whenInvalidPaymentIdFormatThenBadRequestReturned() throws Exception {
     mvc.perform(MockMvcRequestBuilders.get("/payment/not-a-uuid"))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Invalid request parameter: id"));
+        .andExpect(jsonPath("$.errorMessage").value("Invalid request parameter: id"));
   }
 
   @Test
@@ -313,13 +314,13 @@ class PaymentGatewayControllerTest {
             .contentType(MediaType.TEXT_PLAIN)
             .content("card_number=1234"))
         .andExpect(status().isUnsupportedMediaType())
-        .andExpect(jsonPath("$.message").value("Content type not supported. Use application/json"));
+        .andExpect(jsonPath("$.errorMessage").value("Content type not supported. Use application/json"));
   }
 
   @Test
   void whenUnknownEndpointThenNotFoundReturned() throws Exception {
     mvc.perform(MockMvcRequestBuilders.get("/unknown/endpoint"))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.message").value("Resource not found"));
+        .andExpect(jsonPath("$.errorMessage").value(org.hamcrest.Matchers.containsString("No endpoint found for")));
   }
 }

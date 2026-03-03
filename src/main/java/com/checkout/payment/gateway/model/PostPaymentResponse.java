@@ -5,15 +5,15 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PostPaymentResponse {
   private UUID id;
   private PaymentStatus status;
   private String cardNumberLastFour;
-  private int expiryMonth;
-  private int expiryYear;
+  private Integer expiryMonth;
+  private Integer expiryYear;
   private String currency;
-  private int amount;
-  @JsonInclude(JsonInclude.Include.NON_NULL)
+  private Integer amount;
   private List<String> rejectionReasons;
 
   private PostPaymentResponse() {}
@@ -26,10 +26,10 @@ public class PostPaymentResponse {
     private UUID id;
     private PaymentStatus status;
     private String cardNumberLastFour;
-    private int expiryMonth;
-    private int expiryYear;
+    private Integer expiryMonth;
+    private Integer expiryYear;
     private String currency;
-    private int amount;
+    private Integer amount;
     private List<String> rejectionReasons;
 
     private Builder() {}
@@ -37,10 +37,10 @@ public class PostPaymentResponse {
     public Builder id(UUID id) { this.id = id; return this; }
     public Builder status(PaymentStatus status) { this.status = status; return this; }
     public Builder cardNumberLastFour(String cardNumberLastFour) { this.cardNumberLastFour = cardNumberLastFour; return this; }
-    public Builder expiryMonth(int expiryMonth) { this.expiryMonth = expiryMonth; return this; }
-    public Builder expiryYear(int expiryYear) { this.expiryYear = expiryYear; return this; }
+    public Builder expiryMonth(Integer expiryMonth) { this.expiryMonth = expiryMonth; return this; }
+    public Builder expiryYear(Integer expiryYear) { this.expiryYear = expiryYear; return this; }
     public Builder currency(String currency) { this.currency = currency; return this; }
-    public Builder amount(int amount) { this.amount = amount; return this; }
+    public Builder amount(Integer amount) { this.amount = amount; return this; }
     public Builder rejectionReasons(List<String> rejectionReasons) { this.rejectionReasons = rejectionReasons; return this; }
 
     public PostPaymentResponse build() {
@@ -69,11 +69,11 @@ public class PostPaymentResponse {
     return cardNumberLastFour;
   }
 
-  public int getExpiryMonth() {
+  public Integer getExpiryMonth() {
     return expiryMonth;
   }
 
-  public int getExpiryYear() {
+  public Integer getExpiryYear() {
     return expiryYear;
   }
 
@@ -81,7 +81,7 @@ public class PostPaymentResponse {
     return currency;
   }
 
-  public int getAmount() {
+  public Integer getAmount() {
     return amount;
   }
 
