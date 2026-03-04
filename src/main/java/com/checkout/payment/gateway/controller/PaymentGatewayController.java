@@ -6,7 +6,6 @@ import com.checkout.payment.gateway.model.PaymentResponse;
 import com.checkout.payment.gateway.service.IPaymentService;
 import java.net.URI;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +40,6 @@ public class PaymentGatewayController {
 
   @GetMapping("/payment/{id}")
   public ResponseEntity<PaymentResponse> getPaymentById(@PathVariable UUID id) {
-    return new ResponseEntity<>(paymentService.getPaymentById(id), HttpStatus.OK);
+    return ResponseEntity.ok(paymentService.getPaymentById(id));
   }
 }
